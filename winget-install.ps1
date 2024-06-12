@@ -307,7 +307,7 @@ function Test-ModsUninstall ($AppID) {
 }
 
 #Install function
-function Install-App ($AppID, $AppArgs) {
+function Install-App ($AppID) {
     $IsInstalled = Confirm-Install $AppID
     if (!($IsInstalled) -or $AllowUpgrade ) {
         #Check if mods exist (or already exist) for preinstall/install/installedonce/installed
@@ -321,8 +321,9 @@ function Install-App ($AppID, $AppArgs) {
 
         #Install App
         Write-ToLog "-> Installing $AppID..." "Yellow"
-        $WingetArgs = "install --id $AppID -e --accept-package-agreements --accept-source-agreements -s winget -h $AppArgs" -split " "
-        Write-ToLog "-> Running: `"$Winget`" $WingetArgs"
+        #$WingetArgs = "install --id $AppID -e --accept-package-agreements --accept-source-agreements -s winget -h $AppArgs" -split " "
+        $WingetArgs = "install --id $AppID -e --accept-package-agreements --accept-source-agreements -s winget -h" -split " "
+        Write-ToLog "-> Running: `"$Winget`" "
         & "$Winget" $WingetArgs | Where-Object { $_ -notlike "   *" } | Tee-Object -file $LogFile -Append
 
         if ($ModsInstall) {
@@ -364,7 +365,7 @@ function Install-App ($AppID, $AppArgs) {
 }
 
 #Uninstall function
-function Uninstall-App ($AppID, $AppArgs) {
+function Uninstall-App ($AppID) {
     $IsInstalled = Confirm-Install $AppID
     if ($IsInstalled) {
         #Check if mods exist (or already exist) for preuninstall/uninstall/uninstalled
@@ -557,25 +558,28 @@ else {
     Write-ToLog "Running without admin rights.`n "
 }
 
+# added to fix splicing the additional apps
+$delim = ' '
+$ta = $AppIDs -split $delim
 if ($Winget) {
     #Run install or uninstall for all apps
-    foreach ($App_Full in $AppIDs) {
-        #Split AppID and Custom arguments
-        $AppID, $AppArgs = ($App_Full.Trim().Split(" ", 2))
+    foreach ($AppId in $ta) {
+        #fix is replacing this: Split AppID and Custom arguments
+        #$AppID, $AppArgs = ($App_Full.Trim().Split(" ", 2))
 
         #Log current App
         Write-ToLog "Start $AppID processing..." "Blue"
 
         #Install or Uninstall command
         if ($Uninstall) {
-            Uninstall-App $AppID $AppArgs
+            Uninstall-App $AppID
         }
         else {
             #Check if app exists on Winget Repo
             $Exists = Confirm-Exist $AppID
             if ($Exists) {
                 #Install
-                Install-App $AppID $AppArgs
+                Install-App $AppID
             }
         }
 
